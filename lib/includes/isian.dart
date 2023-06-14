@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/global.dart';
 
 class Isian extends StatelessWidget {
   final String labelText;
@@ -23,18 +23,18 @@ class Isian extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardype,
         obscureText: obscure,
-        style: TextStyle(color: GlobalColors().onBackground),
-        cursorColor: GlobalColors().onBackground,
+        style: TextStyle(color: GlobalColors.onBackground),
+        cursorColor: GlobalColors.onBackground,
         decoration: InputDecoration(
           labelText: labelText,
           labelStyle: TextStyle(color: GlobalColors.prettyGrey),
           contentPadding: EdgeInsets.only(top: 3),
-          floatingLabelStyle: TextStyle(color: GlobalColors().onBackground),
+          floatingLabelStyle: TextStyle(color: GlobalColors.onBackground),
           enabledBorder: UnderlineInputBorder(
             borderSide: BorderSide(color: GlobalColors.prettyGrey),
           ),
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: GlobalColors().onBackground),
+            borderSide: BorderSide(color: GlobalColors.onBackground),
           ),
         ),
       ),

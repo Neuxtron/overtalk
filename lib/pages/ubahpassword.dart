@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:overtalk/api/modelUser.dart';
-import 'package:overtalk/api/repository.dart';
+import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/repository.dart';
 import 'package:overtalk/includes/isian.dart';
-import 'package:overtalk/login.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/pages/login.dart';
+import 'package:overtalk/global.dart';
 
 class UbahPassword extends StatefulWidget {
-  final User user;
+  final UserModel user;
   const UbahPassword({super.key, required this.user});
 
   @override
@@ -50,7 +50,7 @@ class _UbahPasswordState extends State<UbahPassword> {
 
       if (response) {
         if (context.mounted) {
-          List<User> listUser = await repository.getUsers();
+          List<UserModel> listUser = await repository.getUsers();
           error = "Gagal Login Kembali";
           for (var element in listUser) {
             if (element.email == widget.user.email) {
@@ -75,7 +75,7 @@ class _UbahPasswordState extends State<UbahPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GlobalColors().backgroundColor,
+      backgroundColor: GlobalColors.backgroundColor,
 
       //--- AppBar ---//
       appBar: AppBar(
@@ -87,14 +87,14 @@ class _UbahPasswordState extends State<UbahPassword> {
           },
           icon: Icon(
             Icons.close,
-            color: GlobalColors().onBackground,
+            color: GlobalColors.onBackground,
           ),
           iconSize: 25,
         ),
         leadingWidth: 40,
         title: Text(
           "Ubah Password",
-          style: TextStyle(color: GlobalColors().onBackground),
+          style: TextStyle(color: GlobalColors.onBackground),
         ),
       ),
 

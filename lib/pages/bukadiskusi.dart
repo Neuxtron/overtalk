@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:overtalk/api/modelUser.dart';
-import 'package:overtalk/api/repository.dart';
+import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/repository.dart';
 import 'package:overtalk/includes/isian.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/global.dart';
 
 class BukaDiskusi extends StatefulWidget {
-  final User user;
+  final UserModel user;
   const BukaDiskusi({super.key, required this.user});
 
   @override
@@ -57,7 +57,7 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GlobalColors().backgroundColor,
+      backgroundColor: GlobalColors.backgroundColor,
 
       //--- AppBar ---//
       appBar: AppBar(
@@ -69,14 +69,14 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
           },
           icon: Icon(
             Icons.close,
-            color: GlobalColors().onBackground,
+            color: GlobalColors.onBackground,
           ),
           iconSize: 25,
         ),
         leadingWidth: 40,
         title: Text(
           "Buka Diskusi",
-          style: TextStyle(color: GlobalColors().onBackground),
+          style: TextStyle(color: GlobalColors.onBackground),
         ),
       ),
 
@@ -107,14 +107,14 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
                 child: TextField(
                   controller: kontenController,
                   maxLines: 20,
-                  style: TextStyle(color: GlobalColors().onBackground),
-                  cursorColor: GlobalColors().onBackground,
+                  style: TextStyle(color: GlobalColors.onBackground),
+                  cursorColor: GlobalColors.onBackground,
                   decoration: InputDecoration(
                     labelText: "Konten",
                     labelStyle: TextStyle(color: GlobalColors.prettyGrey),
                     alignLabelWithHint: true,
                     floatingLabelStyle:
-                        TextStyle(color: GlobalColors().onBackground),
+                        TextStyle(color: GlobalColors.onBackground),
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                         color: GlobalColors.prettyGrey,

@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:overtalk/api/modelDiskusi.dart';
-import 'package:overtalk/api/modelUser.dart';
-import 'package:overtalk/api/repository.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/models/diskusiModel.dart';
+import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/repository.dart';
+import 'package:overtalk/global.dart';
 
-class HalamanDiskusi extends StatefulWidget {
-  final User user;
-  final Diskusi diskusi;
+class Diskusi extends StatefulWidget {
+  final UserModel user;
+  final DiskusiModel diskusi;
 
-  const HalamanDiskusi({
+  const Diskusi({
     super.key,
     required this.user,
     required this.diskusi,
   });
 
   @override
-  State<HalamanDiskusi> createState() => _HalamanDiskusiState();
+  State<Diskusi> createState() => _DiskusiState();
 }
 
-class _HalamanDiskusiState extends State<HalamanDiskusi> {
+class _DiskusiState extends State<Diskusi> {
   final Repository repository = Repository();
   TextEditingController replyController = TextEditingController();
   List replies = [];
   bool bookmarked = false;
 
   void getReplies() async {
-    List<Diskusi> listDiskusi = await repository.getDiskusi();
+    List<DiskusiModel> listDiskusi = await repository.getDiskusi();
     for (var element in listDiskusi) {
       if (element.id == widget.diskusi.id) {
         replies = element.replies;
@@ -96,13 +96,12 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GlobalColors().backgroundColor,
+      backgroundColor: GlobalColors.backgroundColor,
 
       //--- AppBar ---//
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-
         //--- Tombol Back ---//
         leading: Padding(
           padding: const EdgeInsets.only(right: 7),
@@ -111,7 +110,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
             onPressed: toggleBookmark,
             icon: Icon(
               bookmarked ? Icons.bookmark : Icons.bookmark_outline,
-              color: GlobalColors().onBackground,
+              color: GlobalColors.onBackground,
               size: 30,
             ),
           ),
@@ -126,7 +125,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
             },
             icon: Icon(
               Icons.keyboard_arrow_left,
-              color: GlobalColors().onBackground,
+              color: GlobalColors.onBackground,
               size: 40,
             ),
           ),
@@ -151,7 +150,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: GlobalColors().onBackground,
+                      color: GlobalColors.onBackground,
                     ),
                   ),
 
@@ -175,7 +174,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
                       child: Text(
                         widget.diskusi.konten,
                         style: TextStyle(
-                          color: GlobalColors().text,
+                          color: GlobalColors.text,
                         ),
                       ),
                     ),
@@ -191,7 +190,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
                     "Replies",
                     style: TextStyle(
                       fontSize: 18,
-                      color: GlobalColors().onBackground,
+                      color: GlobalColors.onBackground,
                     ),
                   ),
 
@@ -265,7 +264,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
                       padding: EdgeInsets.symmetric(horizontal: 10),
                       height: 50,
                       decoration: BoxDecoration(
-                        color: GlobalColors().backgroundColor,
+                        color: GlobalColors.backgroundColor,
                         border: Border.all(color: GlobalColors.prettyGrey),
                         borderRadius: BorderRadius.circular(13),
                       ),
@@ -274,7 +273,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
                         controller: replyController,
                         style: TextStyle(
                           fontSize: 14,
-                          color: GlobalColors().text,
+                          color: GlobalColors.text,
                         ),
                         decoration: InputDecoration(
                           isCollapsed: true,
@@ -295,7 +294,7 @@ class _HalamanDiskusiState extends State<HalamanDiskusi> {
                     icon: Icon(
                       Icons.send,
                       size: 30,
-                      color: GlobalColors().onBackground,
+                      color: GlobalColors.onBackground,
                     ),
                   ),
                 ],

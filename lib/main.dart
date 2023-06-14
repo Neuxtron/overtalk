@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:overtalk/themes/global.dart';
-import 'package:overtalk/login.dart';
+import 'package:overtalk/global.dart';
+import 'package:overtalk/pages/login.dart';
 
 void main() {
   runApp(const MyApp());

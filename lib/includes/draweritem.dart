@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/global.dart';
 
 class DrawerItem extends StatelessWidget {
   final String text;
@@ -25,7 +25,12 @@ class DrawerItem extends StatelessWidget {
         margin: margin,
         width: selected ? 280 : 255,
         decoration: BoxDecoration(
-          color: GlobalColors().backgroundColor,
+          color: selected
+              ? GlobalColors.primaryColor
+              : GlobalColors.onPrimaryColor,
+          border: Border.all(
+            color: GlobalColors.primaryColor,
+          ),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(50),
             bottomLeft: Radius.circular(50),
@@ -39,7 +44,9 @@ class DrawerItem extends StatelessWidget {
           child: Text(
             text,
             style: TextStyle(
-              color: GlobalColors().onBackground,
+              color: selected
+                  ? GlobalColors.onPrimaryColor
+                  : GlobalColors.primaryColor,
               fontSize: selected ? 20 : 15,
               fontWeight: selected ? FontWeight.bold : FontWeight.normal,
             ),

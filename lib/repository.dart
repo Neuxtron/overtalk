@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:overtalk/api/modelDiskusi.dart';
-import 'package:overtalk/api/modelUser.dart';
+import 'package:overtalk/models/diskusiModel.dart';
+import 'package:overtalk/models/userModel.dart';
 
 class Repository {
   final _baseUrl = "https://64620ee8491f9402f4b1662e.mockapi.io/";
@@ -14,8 +14,8 @@ class Repository {
 
       if (response.statusCode == 200) {
         List jsonData = jsonDecode(response.body);
-        List<Diskusi> dataDiskusi =
-            jsonData.map((e) => Diskusi.fromJson(e)).toList();
+        List<DiskusiModel> dataDiskusi =
+            jsonData.map((e) => DiskusiModel.fromJson(e)).toList();
         return dataDiskusi;
       }
     } catch (e) {
@@ -53,7 +53,8 @@ class Repository {
 
       if (response.statusCode == 200) {
         List jsonData = jsonDecode(response.body);
-        List<User> dataUser = jsonData.map((e) => User.fromJson(e)).toList();
+        List<UserModel> dataUser =
+            jsonData.map((e) => UserModel.fromJson(e)).toList();
         return dataUser;
       }
     } catch (e) {

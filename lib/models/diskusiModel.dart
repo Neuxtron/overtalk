@@ -1,4 +1,4 @@
-class Diskusi {
+class DiskusiModel {
   final String id;
   final String pembuka;
   final String judul;
@@ -6,7 +6,7 @@ class Diskusi {
   final List replies;
   final DateTime createdAt;
 
-  const Diskusi({
+  const DiskusiModel({
     required this.id,
     required this.pembuka,
     required this.judul,
@@ -15,8 +15,8 @@ class Diskusi {
     required this.createdAt,
   });
 
-  factory Diskusi.fromJson(Map<String, dynamic> json) {
-    return Diskusi(
+  factory DiskusiModel.fromJson(Map<String, dynamic> json) {
+    return DiskusiModel(
       id: json['id'],
       pembuka: json['pembuka'],
       judul: json['judul'],

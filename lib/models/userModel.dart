@@ -1,11 +1,11 @@
-class User {
+class UserModel {
   final String id;
   final String email;
   final String nama;
   final String password;
   final List bookmarks;
 
-  User(
+  UserModel(
     this.id,
     this.email,
     this.nama,
@@ -13,8 +13,8 @@ class User {
     this.bookmarks,
   );
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
       json["id"],
       json["email"],
       json["nama"],

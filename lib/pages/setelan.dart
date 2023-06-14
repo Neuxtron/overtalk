@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:overtalk/api/modelUser.dart';
-import 'package:overtalk/api/repository.dart';
-import 'package:overtalk/homepage.dart';
+import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/repository.dart';
+import 'package:overtalk/pages/homepage1.dart';
 import 'package:overtalk/includes/isian.dart';
-import 'package:overtalk/login.dart';
-import 'package:overtalk/themes/global.dart';
-import 'package:overtalk/ubahpassword.dart';
+import 'package:overtalk/pages/login.dart';
+import 'package:overtalk/global.dart';
+import 'package:overtalk/pages/ubahpassword.dart';
 
 class Setelan extends StatefulWidget {
-  final User user;
+  final UserModel user;
   const Setelan({super.key, required this.user});
 
   @override
@@ -28,7 +28,7 @@ class _SetelanState extends State<Setelan> {
     setState(() {});
 
     //--- Error Checking ---//
-    List<User> listUser = await repository.getUsers();
+    List<UserModel> listUser = await repository.getUsers();
     error = "";
     for (var element in listUser) {
       if (element.email == emailController.text &&
@@ -54,7 +54,7 @@ class _SetelanState extends State<Setelan> {
 
       if (response) {
         if (context.mounted) {
-          List<User> listUser = await repository.getUsers();
+          List<UserModel> listUser = await repository.getUsers();
           error = "Gagal Login Kembali";
           for (var element in listUser) {
             if (element.email == emailController.text) {
@@ -126,8 +126,6 @@ class _SetelanState extends State<Setelan> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GlobalColors().backgroundColor,
-
       //--- AppBar ---//
       appBar: AppBar(
         elevation: 0,
@@ -138,14 +136,14 @@ class _SetelanState extends State<Setelan> {
           },
           icon: Icon(
             Icons.close,
-            color: GlobalColors().onBackground,
+            color: GlobalColors.onBackground,
           ),
           iconSize: 25,
         ),
         leadingWidth: 40,
         title: Text(
           "Settings",
-          style: TextStyle(color: GlobalColors().onBackground),
+          style: TextStyle(color: GlobalColors.onBackground),
         ),
       ),
 
@@ -211,7 +209,7 @@ class _SetelanState extends State<Setelan> {
                 title: Text(
                   "Ubah Password",
                   style: TextStyle(
-                    color: GlobalColors().onBackground,
+                    color: GlobalColors.onBackground,
                   ),
                 ),
               ),
@@ -231,7 +229,7 @@ class _SetelanState extends State<Setelan> {
                 title: Text(
                   "Keluar Akun",
                   style: TextStyle(
-                    color: GlobalColors().onBackground,
+                    color: GlobalColors.onBackground,
                   ),
                 ),
               ),
@@ -245,7 +243,7 @@ class _SetelanState extends State<Setelan> {
                 title: Text(
                   kHapusAkun == 0 ? "Hapus Akun" : "Konfirmasi hapus akun?",
                   style: TextStyle(
-                    color: GlobalColors().onBackground,
+                    color: GlobalColors.onBackground,
                   ),
                 ),
               ),

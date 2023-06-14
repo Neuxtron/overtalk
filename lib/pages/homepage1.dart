@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:overtalk/api/modelDiskusi.dart';
-import 'package:overtalk/api/modelUser.dart';
-import 'package:overtalk/api/repository.dart';
-import 'package:overtalk/bukadiskusi.dart';
-import 'package:overtalk/halamandiskusi.dart';
-import 'package:overtalk/setelan.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/models/diskusiModel.dart';
+import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/repository.dart';
+import 'package:overtalk/pages/bukadiskusi.dart';
+import 'package:overtalk/pages/halamandiskusi.dart';
+import 'package:overtalk/pages/setelan.dart';
+import 'package:overtalk/global.dart';
 import 'package:overtalk/includes/draweritem.dart';
 
 class HomePage extends StatefulWidget {
-  final User user;
+  final UserModel user;
   const HomePage({super.key, required this.user});
 
   @override
@@ -20,7 +20,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  List<Diskusi> dataDiskusi = [];
+  List<DiskusiModel> dataDiskusi = [];
   Repository repository = Repository();
   String halaman = "forum";
   String judulHalaman = "OverTalk";
@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void getBookmarks() async {
-    final List<User> listUsers = await repository.getUsers();
+    final List<UserModel> listUsers = await repository.getUsers();
     for (var element in listUsers) {
       if (element.id == widget.user.id) {
         bookmarks = element.bookmarks;
@@ -74,11 +74,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: GlobalColors().backgroundColor,
+      backgroundColor: GlobalColors.backgroundColor,
 
       //--- Sidebar ---//
       endDrawer: Drawer(
-        backgroundColor: GlobalColors.primaryColor,
+        backgroundColor: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
               height: 210,
               width: double.infinity,
               child: ColoredBox(
-                color: GlobalColors.prettyBlack,
+                color: GlobalColors.hotPink.withOpacity(0.3),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -104,7 +104,6 @@ class _HomePageState extends State<HomePage> {
                     Text(
                       widget.user.nama,
                       style: TextStyle(
-                        color: Colors.white,
                         fontSize: 18,
                       ),
                     ),
@@ -211,7 +210,6 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.only(top: 10, bottom: 100),
         itemCount: dataDiskusi.length,
         itemBuilder: (context, index) {
-          String id = dataDiskusi[index].id;
           String judul = dataDiskusi[index].judul;
           String pembuka = dataDiskusi[index].pembuka;
           bool tampil = false;
@@ -255,7 +253,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HalamanDiskusi(
+                      builder: (context) => Diskusi(
                         user: widget.user,
                         diskusi: dataDiskusi[index],
                       ),
@@ -270,7 +268,7 @@ class _HomePageState extends State<HomePage> {
                     judul,
                     maxLines: 2,
                     style: TextStyle(
-                      color: GlobalColors().onBackground,
+                      color: GlobalColors.onBackground,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
                       overflow: TextOverflow.ellipsis,

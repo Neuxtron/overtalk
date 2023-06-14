@@ -1,61 +1,83 @@
 import 'package:flutter/material.dart';
-import 'package:overtalk/api/modelUser.dart';
-import 'package:overtalk/api/repository.dart';
-import 'package:overtalk/daftar.dart';
-import 'package:overtalk/homepage.dart';
+import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/repository.dart';
 import 'package:overtalk/includes/inputteks.dart';
-import 'package:overtalk/themes/global.dart';
+import 'package:overtalk/global.dart';
 
-class Login extends StatefulWidget {
-  Login({super.key});
+class Daftar extends StatefulWidget {
+  Daftar({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<Daftar> createState() => _DaftarState();
 }
 
-class _LoginState extends State<Login> {
+class _DaftarState extends State<Daftar> {
   final Repository repository = Repository();
 
+  TextEditingController namaController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController kPasswordController = TextEditingController();
+
   String error = "";
   bool loading = false;
 
-  void login() async {
+  void signUp() async {
     loading = true;
     setState(() {});
 
-    List<User> listUser = await repository.getUsers();
-    error = "Gagal Login";
+    //--- Error Checking ---//
+    List<UserModel> listUser = await repository.getUsers();
+    error = "";
     for (var element in listUser) {
-      if (element.email == emailController.text &&
-          element.password == passwordController.text) {
-        error = "";
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(
-              user: element,
-            ),
-          ),
-        );
+      if (element.email == emailController.text) {
+        error = "Email sudah terdaftar";
       }
     }
-    loading = false;
+    if (passwordController.text != kPasswordController.text) {
+      error = "Kedua password tidak sama";
+    }
+    if (passwordController.text.length < 8) {
+      error = "Password minimal 8 karakter";
+    }
+    if (emailController.text == "") {
+      error = "Email tidak boleh kosong";
+    }
+    if (namaController.text == "") {
+      error = "Nama tidak boleh kosong";
+    }
     setState(() {});
+
+    if (error == "") {
+      final response = await repository.daftar(
+        namaController.text,
+        emailController.text,
+        passwordController.text,
+      );
+      if (response) {
+        if (context.mounted) Navigator.pop(context);
+      } else {
+        error = "Gagal mendaftar akun";
+      }
+    } else {
+      loading = false;
+      setState(() {});
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
+    namaController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    kPasswordController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: GlobalColors().backgroundColor,
+      backgroundColor: GlobalColors.backgroundColor,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -63,7 +85,7 @@ class _LoginState extends State<Login> {
             //
             //--- Logo OverTalk ---//
             Padding(
-              padding: const EdgeInsets.only(top: 100, bottom: 30),
+              padding: const EdgeInsets.only(top: 80, bottom: 30),
               child: Image.asset(
                 "assets/splash_light.png",
                 height: 90,
@@ -82,7 +104,7 @@ class _LoginState extends State<Login> {
                   //
                   //--- Judul Halaman ---//
                   Text(
-                    "Login",
+                    "Sign Up",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -101,6 +123,13 @@ class _LoginState extends State<Login> {
                     ),
                   ),
 
+                  //--- Input Nama ---//
+                  InputTeks(
+                    hint: "Nama",
+                    keyboardType: TextInputType.text,
+                    controller: namaController,
+                  ),
+
                   //--- Input Email ---//
                   InputTeks(
                     hint: "Email",
@@ -116,9 +145,19 @@ class _LoginState extends State<Login> {
                     controller: passwordController,
                   ),
 
-                  //--- Tombol Login ---//
+                  //--- Input Konfirmasi Password ---//
+                  InputTeks(
+                    hint: "Konfirmasi Password",
+                    obscure: true,
+                    keyboardType: TextInputType.text,
+                    controller: kPasswordController,
+                  ),
+
+                  //--- Tombol Daftar ---//
                   InkWell(
-                    onTap: login,
+                    onTap: () {
+                      if (!loading) signUp();
+                    },
                     child: Container(
                       height: 36,
                       margin: EdgeInsets.fromLTRB(90, 27, 90, 0),
@@ -130,7 +169,7 @@ class _LoginState extends State<Login> {
                       ),
                       child: Center(
                         child: Text(
-                          "Login",
+                          "Sign Up",
                           style: TextStyle(
                             color: GlobalColors.primaryColor,
                             fontWeight: FontWeight.bold,
@@ -148,19 +187,14 @@ class _LoginState extends State<Login> {
               height: 20,
             ),
 
-            //--- Daftar akun baru ---//
+            //--- Sudah punya akun ---//
             Center(
               child: TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Daftar(),
-                    ),
-                  );
+                  Navigator.pop(context);
                 },
                 child: Text(
-                  "Create an account",
+                  "Sign in to existing account",
                   style: TextStyle(
                     color: GlobalColors.prettyGrey,
                     fontWeight: FontWeight.normal,
