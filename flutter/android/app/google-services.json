@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "505275054795",
+    "project_id": "overtalk-172a9",
+    "storage_bucket": "overtalk-172a9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505275054795:android:b1263f0d2aac00c62db94e",
+        "android_client_info": {
+          "package_name": "com.example.overtalk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "505275054795-9k9oi9g85p3df6k4ggctvn4808i5o8s6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7dt961FGWD_N2pUwPpUybCo36OOV4rqs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "505275054795-9k9oi9g85p3df6k4ggctvn4808i5o8s6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
