@@ -1,21 +1,24 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/repository.dart';
-import 'package:overtalk/pages/homepage1.dart';
 import 'package:overtalk/includes/isian.dart';
-import 'package:overtalk/pages/login.dart';
+import 'package:overtalk/auth/login.dart';
 import 'package:overtalk/global.dart';
-import 'package:overtalk/pages/ubahpassword.dart';
 
 class Setelan extends StatefulWidget {
-  final UserModel user;
-  const Setelan({super.key, required this.user});
+  final String namaUser;
+  const Setelan({
+    super.key,
+    required this.namaUser,
+  });
 
   @override
   State<Setelan> createState() => _SetelanState();
 }
 
 class _SetelanState extends State<Setelan> {
+  final _email = FirebaseAuth.instance.currentUser!.email!;
   final Repository repository = Repository();
   TextEditingController namaController = TextEditingController();
   TextEditingController emailController = TextEditingController();
@@ -28,49 +31,23 @@ class _SetelanState extends State<Setelan> {
     setState(() {});
 
     //--- Error Checking ---//
-    List<UserModel> listUser = await repository.getUsers();
     error = "";
-    for (var element in listUser) {
-      if (element.email == emailController.text &&
-          emailController.text != widget.user.email) {
-        error = "Email sudah terdaftar";
-      }
-    }
-    if (emailController.text == "") {
-      error = "Email tidak boleh kosong";
-    }
     if (namaController.text == "") {
       error = "Nama tidak boleh kosong";
     }
     setState(() {});
 
     if (error == "") {
+      UserModel user = await repository.getUser(_email);
       final response = await repository.updateUser(
-        widget.user.id,
+        user.id,
         namaController.text,
-        emailController.text,
-        widget.user.password,
+        _email,
+        user.bookmarks,
       );
 
       if (response) {
-        if (context.mounted) {
-          List<UserModel> listUser = await repository.getUsers();
-          error = "Gagal Login Kembali";
-          for (var element in listUser) {
-            if (element.email == emailController.text) {
-              error = "";
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HomePage(
-                    user: element,
-                  ),
-                ),
-                (e) => false,
-              );
-            }
-          }
-        }
+        if (context.mounted) Navigator.pop(context);
       }
     }
 
@@ -78,22 +55,11 @@ class _SetelanState extends State<Setelan> {
     setState(() {});
   }
 
-  void ubahPassword() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => UbahPassword(
-          user: widget.user,
-        ),
-      ),
-    );
-  }
-
   void logout() {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => Login(),
+        builder: (context) => const Login(),
       ),
       (e) => false,
     );
@@ -101,7 +67,7 @@ class _SetelanState extends State<Setelan> {
 
   void hapusAkun() {
     if (kHapusAkun == 1) {
-      repository.hapusAkun(widget.user.id);
+      repository.hapusAkun(_email);
       logout();
     }
     kHapusAkun++;
@@ -112,14 +78,13 @@ class _SetelanState extends State<Setelan> {
   void dispose() {
     super.dispose();
     namaController.dispose();
-    emailController.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    namaController.text = widget.user.nama;
-    emailController.text = widget.user.email;
+    namaController.text = widget.namaUser;
+    emailController.text = _email;
     setState(() {});
   }
 
@@ -134,14 +99,14 @@ class _SetelanState extends State<Setelan> {
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Icon(
+          icon: const Icon(
             Icons.close,
             color: GlobalColors.onBackground,
           ),
           iconSize: 25,
         ),
         leadingWidth: 40,
-        title: Text(
+        title: const Text(
           "Settings",
           style: TextStyle(color: GlobalColors.onBackground),
         ),
@@ -157,11 +122,11 @@ class _SetelanState extends State<Setelan> {
               //--- Foto Profil ---//
               Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 20),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(100),
                     child: Image(
-                      image: NetworkImage(""),
+                      image: const NetworkImage(""),
                       height: 100,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.asset(
@@ -179,15 +144,15 @@ class _SetelanState extends State<Setelan> {
                 padding: const EdgeInsets.only(top: 0),
                 child: Text(
                   error,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.red,
                   ),
                 ),
               ),
 
               //--- Account ---//
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
                 child: Text(
                   "Account",
                   style: TextStyle(
@@ -205,8 +170,8 @@ class _SetelanState extends State<Setelan> {
                 keyboardype: TextInputType.emailAddress,
               ),
               ListTile(
-                onTap: ubahPassword,
-                title: Text(
+                onTap: () {},
+                title: const Text(
                   "Ubah Password",
                   style: TextStyle(
                     color: GlobalColors.onBackground,
@@ -215,8 +180,8 @@ class _SetelanState extends State<Setelan> {
               ),
 
               //--- Settings ---//
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10, top: 40),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10, top: 40),
                 child: Text(
                   "Settings",
                   style: TextStyle(
@@ -226,14 +191,14 @@ class _SetelanState extends State<Setelan> {
               ),
               ListTile(
                 onTap: logout,
-                title: Text(
+                title: const Text(
                   "Keluar Akun",
                   style: TextStyle(
                     color: GlobalColors.onBackground,
                   ),
                 ),
               ),
-              Divider(
+              const Divider(
                 color: GlobalColors.prettyGrey,
                 thickness: 1,
                 height: 1,
@@ -242,12 +207,12 @@ class _SetelanState extends State<Setelan> {
                 onTap: hapusAkun,
                 title: Text(
                   kHapusAkun == 0 ? "Hapus Akun" : "Konfirmasi hapus akun?",
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: GlobalColors.onBackground,
                   ),
                 ),
               ),
-              Divider(
+              const Divider(
                 color: GlobalColors.prettyGrey,
                 thickness: 1,
                 height: 1,
@@ -258,14 +223,14 @@ class _SetelanState extends State<Setelan> {
                 onTap: simpan,
                 child: Container(
                   height: 36,
-                  margin: EdgeInsets.fromLTRB(90, 27, 90, 0),
+                  margin: const EdgeInsets.fromLTRB(90, 27, 90, 0),
                   decoration: BoxDecoration(
                     color: loading
                         ? GlobalColors.primaryColor.withOpacity(0.5)
                         : GlobalColors.primaryColor,
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       "Simpan",
                       style: TextStyle(

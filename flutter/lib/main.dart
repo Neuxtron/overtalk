@@ -1,9 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:overtalk/auth/mainpage.dart';
 import 'package:overtalk/global.dart';
-import 'package:overtalk/models/userModel.dart';
-import 'package:overtalk/pages/homepage.dart';
-import 'package:overtalk/pages/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,13 +15,17 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  void getToken() async {
+    final token = await FirebaseMessaging.instance.getToken();
+    print(token);
+  }
+
   @override
   Widget build(BuildContext context) {
-    UserModel user =
-        UserModel("1", "zuzuzu@gmail.com", "Zuzuzu", "Hmmm", [1, 1, 1]);
+    getToken();
 
     return MaterialApp(
-      home: HomePage(user: user),
+      home: const MainPage(),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSwatch().copyWith(

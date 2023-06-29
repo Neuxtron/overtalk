@@ -31,7 +31,7 @@ class DrawerItem extends StatelessWidget {
           border: Border.all(
             color: GlobalColors.primaryColor,
           ),
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(50),
             bottomLeft: Radius.circular(50),
           ),

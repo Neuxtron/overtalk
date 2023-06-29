@@ -1,11 +1,28 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:overtalk/models/diskusiModel.dart';
-import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/models/diskusi_model.dart';
+import 'package:overtalk/models/replies_model.dart';
+import 'package:overtalk/models/user_model.dart';
 
 class Repository {
-  final _baseUrl = "https://64620ee8491f9402f4b1662e.mockapi.io/";
+  final _baseUrl = "http://192.168.18.14:3000";
+
+  //--- Ambil Satu User ---//
+  Future getUser(String email) async {
+    try {
+      final response =
+          await http.get(Uri.parse("$_baseUrl/users/single?email=$email"));
+
+      if (response.statusCode == 200) {
+        List jsonData = jsonDecode(response.body);
+        UserModel dataUser = jsonData.map((e) => UserModel.fromJson(e)).first;
+        return dataUser;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
 
   //--- Ambil List Diskusi ---//
   Future getDiskusi() async {
@@ -32,7 +49,6 @@ class Repository {
         body: jsonEncode({
           "nama": nama,
           "email": email,
-          "password": password,
         }),
       );
 
@@ -46,7 +62,7 @@ class Repository {
     }
   }
 
-  //--- Ambil Data Users ---//
+  //--- Ambil Semua Users ---//
   Future getUsers() async {
     try {
       final response = await http.get(Uri.parse("$_baseUrl/users"));
@@ -63,8 +79,7 @@ class Repository {
   }
 
   //--- Buka Diskusi ---//
-  Future bukaDiskusi(
-      String judul, String konten, String pembuka, String createdAt) async {
+  Future bukaDiskusi(String judul, String konten, int idUser) async {
     try {
       final response = await http.post(
         Uri.parse("$_baseUrl/diskusi"),
@@ -72,12 +87,11 @@ class Repository {
         body: jsonEncode({
           "judul": judul,
           "konten": konten,
-          "pembuka": pembuka,
-          "createdAt": createdAt
+          "idUser": idUser,
         }),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         return true;
       } else {
         return false;
@@ -87,14 +101,33 @@ class Repository {
     }
   }
 
-  //--- Tambah Reply ---//
-  Future updateReplies(String idDiskusi, List replies) async {
+  //--- Ambil Replies ---//
+  Future getReplies(int idDiskusi) async {
     try {
-      final response = await http.put(
-        Uri.parse("$_baseUrl/diskusi/$idDiskusi"),
+      final response =
+          await http.get(Uri.parse("$_baseUrl/replies?id_diskusi=$idDiskusi"));
+
+      if (response.statusCode == 200) {
+        List jsonData = jsonDecode(response.body);
+        List<Replies> dataReplies =
+            jsonData.map((e) => Replies.fromJson(e)).toList();
+        return dataReplies;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  //--- Tambah Reply ---//
+  Future reply(int idDiskusi, int idUser, String reply) async {
+    try {
+      final response = await http.post(
+        Uri.parse("$_baseUrl/replies"),
         headers: <String, String>{"content-type": "application/json"},
         body: jsonEncode({
-          "replies": replies,
+          "idDiskusi": idDiskusi,
+          "idUser": idUser,
+          "reply": reply,
         }),
       );
 
@@ -110,17 +143,20 @@ class Repository {
 
   //--- Update User ---//
   Future updateUser(
-      String id, String nama, String email, String password) async {
+      int idUser, String nama, String email, List bookmarks) async {
     try {
       final response = await http.put(
-        Uri.parse("$_baseUrl/users/$id"),
+        Uri.parse("$_baseUrl/users"),
         headers: <String, String>{"content-type": "application/json"},
         body: jsonEncode({
+          "id": idUser,
           "nama": nama,
           "email": email,
-          "password": password,
+          "bookmarks": bookmarks,
         }),
       );
+
+      print(response.body);
 
       if (response.statusCode == 200) {
         return true;
@@ -133,28 +169,13 @@ class Repository {
   }
 
   //--- Hapus Akun ---//
-  Future hapusAkun(String id) async {
+  Future hapusAkun(String email) async {
     try {
-      final response = await http.delete(Uri.parse("$_baseUrl/users/$id"));
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
-    } catch (e) {
-      print(e.toString());
-    }
-  }
-
-  //--- Update Bookmarks ---//
-  Future updateBookmarks(String idUser, List bookmarks) async {
-    try {
-      final response = await http.put(
-        Uri.parse("$_baseUrl/users/$idUser"),
-        headers: <String, String>{"content-type": "application/json"},
+      final response = await http.delete(
+        Uri.parse("$_baseUrl/users"),
+        headers: <String, String>{"Content-Type": "application/json"},
         body: jsonEncode({
-          "bookmarks": bookmarks,
+          "email": email,
         }),
       );
 
@@ -167,6 +188,28 @@ class Repository {
       print(e.toString());
     }
   }
+
+  //--- Update Bookmarks ---//
+  // Future updateBookmarks(String email, List bookmarks) async {
+  //   try {
+  //     final response = await http.put(
+  //       Uri.parse("$_baseUrl/users"),
+  //       headers: <String, String>{"content-type": "application/json"},
+  //       body: jsonEncode({
+  //         "email": email,
+  //         "bookmarks": bookmarks,
+  //       }),
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       return true;
+  //     } else {
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     print(e.toString());
+  //   }
+  // }
 
   //--- Hapus Forum ---//
   Future hapusDiskusi(String id) async {

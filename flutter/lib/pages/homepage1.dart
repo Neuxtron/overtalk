@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:overtalk/models/diskusiModel.dart';
-import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/models/diskusi_model.dart';
+import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/repository.dart';
 import 'package:overtalk/pages/bukadiskusi.dart';
 import 'package:overtalk/pages/halamandiskusi.dart';
@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.only(bottom: 20, top: 30),
                       child: CircleAvatar(
                         backgroundColor: GlobalColors.primaryColor,
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Text(
                       widget.user.nama,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                       ),
                     ),
@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage> {
                   //--- Tombol Settings ---//
                   DrawerItem(
                     text: "Settings",
-                    margin: EdgeInsets.only(top: 10, bottom: 250),
+                    margin: const EdgeInsets.only(top: 10, bottom: 250),
                     onTap: () {
                       scaffoldKey.currentState!.closeEndDrawer();
                       Navigator.push(
@@ -181,7 +181,7 @@ class _HomePageState extends State<HomePage> {
             heroTag: "refresh", // Biar gk error
             onPressed: refresh,
             mini: true,
-            child: Icon(Icons.refresh),
+            child: const Icon(Icons.refresh),
           ),
 
           //--- Buka Diskusi ---//
@@ -197,7 +197,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ).then((value) => refresh());
             },
-            child: Icon(
+            child: const Icon(
               Icons.add_comment,
               size: 27,
             ),
@@ -267,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                   child: Text(
                     judul,
                     maxLines: 2,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: GlobalColors.onBackground,
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -282,7 +282,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       "By: $pembuka",
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: GlobalColors.prettyGrey,
                         fontWeight: FontWeight.w400,
                         fontSize: 14,
@@ -292,7 +292,7 @@ class _HomePageState extends State<HomePage> {
                     //--- Created At Item ---//
                     Text(
                       createdAt,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: GlobalColors.prettyGrey,
                         fontWeight: FontWeight.w400,
                         fontSize: 14,
@@ -302,14 +302,14 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 //--- Icon Panah ---//
-                trailing: Icon(
+                trailing: const Icon(
                   Icons.keyboard_arrow_right,
                   color: GlobalColors.grey7,
                 ),
               ),
             );
           }
-          return SizedBox();
+          return const SizedBox();
         },
       ),
     );

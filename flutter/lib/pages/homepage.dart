@@ -1,17 +1,19 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:overtalk/global.dart';
 import 'package:overtalk/includes/draweritem.dart';
-import 'package:overtalk/models/diskusiModel.dart';
-import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/models/diskusi_model.dart';
+import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/pages/halamandiskusi.dart';
 import 'package:overtalk/pages/setelan.dart';
 import 'package:overtalk/repository.dart';
 
-class HomePage extends StatefulWidget {
-  final UserModel user;
+import 'bukadiskusi.dart';
 
-  const HomePage({super.key, required this.user});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,12 +21,28 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  final _email = FirebaseAuth.instance.currentUser!.email!;
 
   List<DiskusiModel> dataDiskusi = [];
   Repository repository = Repository();
   String halaman = "forum";
   String judulHalaman = "OverTalk";
   List bookmarks = [];
+  List<UserModel> _listUsers = [];
+  String _namaUser = "";
+
+  void getCurrentUser() async {
+    UserModel user = await repository.getUser(_email);
+    setState(() {
+      bookmarks = user.bookmarks;
+      _namaUser = user.nama;
+    });
+  }
+
+  void getUsers() async {
+    _listUsers = await repository.getUsers();
+    setState(() {});
+  }
 
   void getDiskusi() async {
     dataDiskusi = await repository.getDiskusi();
@@ -41,18 +59,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void getBookmarks() async {
-    final List<UserModel> listUsers = await repository.getUsers();
-    for (var element in listUsers) {
-      if (element.id == widget.user.id) {
-        bookmarks = element.bookmarks;
-      }
-    }
-  }
-
   void hapusDiskusi(String id) async {
     final response = await repository.hapusDiskusi(id);
-    print("hai");
     if (response) {
       refresh();
       setState(() {});
@@ -61,7 +69,8 @@ class _HomePageState extends State<HomePage> {
 
   void refresh() {
     getDiskusi();
-    getBookmarks();
+    getUsers();
+    getCurrentUser();
   }
 
   @override
@@ -73,6 +82,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: scaffoldKey,
       backgroundColor: GlobalColors.primaryColor,
       endDrawer: Drawer(
         backgroundColor: Colors.white,
@@ -90,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.only(bottom: 20, top: 30),
                       child: CircleAvatar(
                         backgroundColor: GlobalColors.primaryColor,
@@ -99,8 +109,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Text(
-                      widget.user.nama,
-                      style: TextStyle(
+                      _namaUser,
+                      style: const TextStyle(
                         fontSize: 18,
                       ),
                     ),
@@ -142,14 +152,14 @@ class _HomePageState extends State<HomePage> {
                   //--- Tombol Settings ---//
                   DrawerItem(
                     text: "Settings",
-                    margin: EdgeInsets.only(top: 10, bottom: 250),
+                    margin: const EdgeInsets.only(top: 10, bottom: 250),
                     onTap: () {
                       scaffoldKey.currentState!.closeEndDrawer();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => Setelan(
-                            user: widget.user,
+                            namaUser: _namaUser,
                           ),
                         ),
                       );
@@ -161,15 +171,47 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+
+      //--- Tombol Refresh ---//
+      floatingActionButton: Wrap(
+        direction: Axis.vertical,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          FloatingActionButton(
+            heroTag: "refresh", // Biar gk error
+            onPressed: refresh,
+            mini: true,
+            child: const Icon(Icons.refresh),
+          ),
+
+          //--- Buka Diskusi ---//
+          FloatingActionButton(
+            heroTag: "bukaDiskusi", // Biar gk error
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BukaDiskusi(),
+                ),
+              ).then((value) => refresh());
+            },
+            child: const Icon(
+              Icons.add_comment,
+              size: 27,
+            ),
+          ),
+        ],
+      ),
+
       body: Stack(
         children: [
           Transform.translate(
-            offset: Offset(150, -170),
+            offset: const Offset(150, -170),
             child: ClipOval(
               child: Container(
                 height: 300,
                 width: 350,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Color(0xFFFF78BC),
                   borderRadius: BorderRadius.all(Radius.elliptical(500, 500)),
                 ),
@@ -184,10 +226,10 @@ class _HomePageState extends State<HomePage> {
                 backgroundColor: Colors.transparent,
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: false,
-                  titlePadding: EdgeInsets.only(bottom: 30, left: 30),
+                  titlePadding: const EdgeInsets.only(bottom: 30, left: 30),
                   title: Text(
                     judulHalaman,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontFamily: 'Arial Rounded',
                       fontSize: 24,
                     ),
@@ -202,7 +244,7 @@ class _HomePageState extends State<HomePage> {
                     minHeight: MediaQuery.of(context).size.height,
                   ),
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(30),
@@ -214,12 +256,19 @@ class _HomePageState extends State<HomePage> {
                     child: ListView.builder(
                       shrinkWrap: true,
                       padding: const EdgeInsets.only(top: 30, bottom: 100),
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: dataDiskusi.length,
                       itemBuilder: (context, index) {
                         String judul = dataDiskusi[index].judul;
-                        String pembuka = dataDiskusi[index].pembuka;
+                        int idUser = dataDiskusi[index].idUser;
+                        String pembuka = "Unknown User";
                         bool tampil = false;
+
+                        for (var element in _listUsers) {
+                          if (idUser == element.id) {
+                            pembuka = element.nama;
+                          }
+                        }
 
                         String createdAt = DateFormat("dd MMMM yyyy")
                             .format(dataDiskusi[index].createdAt);
@@ -262,8 +311,9 @@ class _HomePageState extends State<HomePage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => Diskusi(
-                                      user: widget.user,
                                       diskusi: dataDiskusi[index],
+                                      pembuka: pembuka,
+                                      bookmarks: bookmarks,
                                     ),
                                   ),
                                 ).then((value) => refresh());
@@ -275,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                                 child: Text(
                                   judul,
                                   maxLines: 2,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: GlobalColors.onBackground,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -290,7 +340,7 @@ class _HomePageState extends State<HomePage> {
                                 children: [
                                   Text(
                                     "By: $pembuka",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: GlobalColors.prettyGrey,
                                       fontWeight: FontWeight.w400,
                                       fontSize: 14,
@@ -300,7 +350,7 @@ class _HomePageState extends State<HomePage> {
                                   //--- Created At Item ---//
                                   Text(
                                     createdAt,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: GlobalColors.prettyGrey,
                                       fontWeight: FontWeight.w400,
                                       fontSize: 14,
@@ -310,14 +360,14 @@ class _HomePageState extends State<HomePage> {
                               ),
 
                               //--- Icon Panah ---//
-                              trailing: Icon(
+                              trailing: const Icon(
                                 Icons.keyboard_arrow_right,
                                 color: GlobalColors.grey7,
                               ),
                             ),
                           );
                         }
-                        return SizedBox();
+                        return const SizedBox();
                       },
                     ),
                   ),

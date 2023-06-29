@@ -1,18 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:overtalk/models/diskusiModel.dart';
-import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/models/diskusi_model.dart';
+import 'package:overtalk/models/replies_model.dart';
+import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/repository.dart';
 import 'package:overtalk/global.dart';
 
 class Diskusi extends StatefulWidget {
-  final UserModel user;
   final DiskusiModel diskusi;
+  final String pembuka;
+  final List bookmarks;
 
   const Diskusi({
     super.key,
-    required this.user,
     required this.diskusi,
+    required this.pembuka,
+    required this.bookmarks,
   });
 
   @override
@@ -20,68 +24,60 @@ class Diskusi extends StatefulWidget {
 }
 
 class _DiskusiState extends State<Diskusi> {
+  final _email = FirebaseAuth.instance.currentUser!.email!;
   final Repository repository = Repository();
+  final _scrollController = ScrollController();
   TextEditingController replyController = TextEditingController();
-  List replies = [];
-  bool bookmarked = false;
+
+  List<Replies> replies = [];
+  List<UserModel> listUsers = [];
+  bool _bookmarked = false;
+
+  void getUsers() async {
+    listUsers = await repository.getUsers();
+    setState(() {});
+  }
 
   void getReplies() async {
-    List<DiskusiModel> listDiskusi = await repository.getDiskusi();
-    for (var element in listDiskusi) {
-      if (element.id == widget.diskusi.id) {
-        replies = element.replies;
-        setState(() {});
-      }
-    }
+    replies = await repository.getReplies(widget.diskusi.id);
+    setState(() {});
   }
 
   void reply() async {
     final String reply = replyController.text;
     replyController.text = "";
-    getReplies();
-    Map<String, String> pesan = {
-      "nama": widget.user.nama,
-      "reply": reply,
-    };
 
-    replies.add(pesan);
-    final response = await repository.updateReplies(widget.diskusi.id, replies);
+    UserModel user = await repository.getUser(_email);
+
+    final response = await repository.reply(widget.diskusi.id, user.id, reply);
 
     if (response) getReplies();
   }
 
   void toggleBookmark() async {
-    if (bookmarked) {
-      List bookmarks = widget.user.bookmarks;
+    UserModel user = await repository.getUser(_email);
+    List bookmarks = widget.bookmarks;
+
+    if (_bookmarked) {
       bookmarks.removeWhere((element) => element == widget.diskusi.id);
-      final response =
-          await repository.updateBookmarks(widget.user.id, bookmarks);
-
-      if (response) {
-        bookmarked = false;
-        setState(() {});
-      }
     } else {
-      List bookmarks = widget.user.bookmarks;
       bookmarks.add(widget.diskusi.id);
-      final response =
-          await repository.updateBookmarks(widget.user.id, bookmarks);
+    }
 
-      if (response) {
-        bookmarked = true;
-        setState(() {});
-      }
+    final response =
+        await repository.updateUser(user.id, user.nama, _email, bookmarks);
+    if (response) {
+      setState(() {
+        _bookmarked = !_bookmarked;
+      });
     }
   }
 
   void getBookmark() {
-    for (var element in widget.user.bookmarks) {
-      print(widget.user.bookmarks);
-      print(widget.diskusi.id);
+    for (var element in widget.bookmarks) {
       if (element == widget.diskusi.id) {
-        bookmarked = true;
+        _bookmarked = true;
         setState(() {});
-        print(bookmarked);
       }
     }
   }
@@ -91,6 +87,14 @@ class _DiskusiState extends State<Diskusi> {
     super.initState();
     getReplies();
     getBookmark();
+    getUsers();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    replyController.dispose();
+    _scrollController.dispose();
   }
 
   @override
@@ -103,30 +107,30 @@ class _DiskusiState extends State<Diskusi> {
         elevation: 0,
         backgroundColor: Colors.transparent,
         //--- Tombol Back ---//
-        leading: Padding(
-          padding: const EdgeInsets.only(right: 7),
-          child: IconButton(
-            splashRadius: 25,
-            onPressed: toggleBookmark,
-            icon: Icon(
-              bookmarked ? Icons.bookmark : Icons.bookmark_outline,
-              color: GlobalColors.onBackground,
-              size: 30,
-            ),
+        leading: IconButton(
+          splashRadius: 25,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.keyboard_arrow_left,
+            color: GlobalColors.onBackground,
+            size: 40,
           ),
         ),
 
         //--- Tombol Bookmark ---//
         actions: [
-          IconButton(
-            splashRadius: 25,
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(
-              Icons.keyboard_arrow_left,
-              color: GlobalColors.onBackground,
-              size: 40,
+          Padding(
+            padding: const EdgeInsets.only(right: 7),
+            child: IconButton(
+              splashRadius: 25,
+              onPressed: toggleBookmark,
+              icon: Icon(
+                _bookmarked ? Icons.bookmark : Icons.bookmark_outline,
+                color: GlobalColors.onBackground,
+                size: 30,
+              ),
             ),
           ),
         ],
@@ -140,6 +144,7 @@ class _DiskusiState extends State<Diskusi> {
           Padding(
             padding: const EdgeInsets.all(20),
             child: SingleChildScrollView(
+              controller: _scrollController,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -147,7 +152,7 @@ class _DiskusiState extends State<Diskusi> {
                   //--- Judul Diskusi ---//
                   Text(
                     widget.diskusi.judul,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: GlobalColors.onBackground,
@@ -156,14 +161,14 @@ class _DiskusiState extends State<Diskusi> {
 
                   //--- Pembuka Diskusi ---//
                   Text(
-                    widget.diskusi.pembuka,
-                    style: TextStyle(color: GlobalColors.prettyGrey),
+                    widget.pembuka,
+                    style: const TextStyle(color: GlobalColors.prettyGrey),
                   ),
 
                   //--- Created At Diskusi ---//
                   Text(
                     DateFormat("dd MMMM yyyy").format(widget.diskusi.createdAt),
-                    style: TextStyle(color: GlobalColors.prettyGrey),
+                    style: const TextStyle(color: GlobalColors.prettyGrey),
                   ),
 
                   //--- Konten Diskusi ---//
@@ -173,7 +178,7 @@ class _DiskusiState extends State<Diskusi> {
                       width: double.infinity,
                       child: Text(
                         widget.diskusi.konten,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: GlobalColors.text,
                         ),
                       ),
@@ -181,12 +186,12 @@ class _DiskusiState extends State<Diskusi> {
                   ),
 
                   //--- Garis Abu2 dan Tulisan Replies ---//
-                  Divider(
+                  const Divider(
                     color: GlobalColors.prettyGrey,
                     thickness: 1,
                     height: 50,
                   ),
-                  Text(
+                  const Text(
                     "Replies",
                     style: TextStyle(
                       fontSize: 18,
@@ -195,37 +200,65 @@ class _DiskusiState extends State<Diskusi> {
                   ),
 
                   //--- Jarak ---//
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
 
                   //--- List Replies ---/
-                  ListView.builder(
+                  ListView.separated(
                     shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: replies.length,
-                    padding: EdgeInsets.only(bottom: 50),
+                    padding: const EdgeInsets.only(bottom: 50),
                     itemBuilder: (context, index) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          //--- Nama Yang Reply ---//
-                          Text(
-                            replies[index]["nama"],
-                            style: TextStyle(fontSize: 12),
-                          ),
+                      Replies reply = replies[index];
+                      String nama = "";
 
-                          //--- Isi Reply ---//
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            margin: EdgeInsets.only(top: 5, bottom: 25),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: GlobalColors.prettyGrey,
+                      for (var element in listUsers) {
+                        if (replies[index].idUser == element.id) {
+                          nama = element.nama;
+                        }
+                      }
+
+                      return Padding(
+                          padding: const EdgeInsets.only(top: 25),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: Colors.grey.shade400,
+                                backgroundImage:
+                                    const AssetImage("assets/profile.jpg"),
                               ),
-                            ),
-                            child: Text(replies[index]["reply"]),
-                          ),
-                        ],
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      nama,
+                                      style:
+                                          TextStyle(color: GlobalColors.grey9),
+                                    ),
+                                    Text(
+                                      DateFormat('dd-MM-yyyy')
+                                          .format(reply.createdAt),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: GlobalColors.grey9,
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                    Text(
+                                      reply.reply,
+                                      style: TextStyle(),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            ],
+                          ));
+                    },
+                    separatorBuilder: (context, index) {
+                      return Divider(
+                        color: GlobalColors.grey9,
                       );
                     },
                   ),
@@ -246,7 +279,7 @@ class _DiskusiState extends State<Diskusi> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100),
                     child: Image(
-                      image: NetworkImage(""),
+                      image: const NetworkImage(""),
                       width: 50,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.asset(
@@ -260,8 +293,8 @@ class _DiskusiState extends State<Diskusi> {
                   //--- Textbox Reply ---//
                   Expanded(
                     child: Container(
-                      margin: EdgeInsets.only(left: 12),
-                      padding: EdgeInsets.symmetric(horizontal: 10),
+                      margin: const EdgeInsets.only(left: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       height: 50,
                       decoration: BoxDecoration(
                         color: GlobalColors.backgroundColor,
@@ -271,11 +304,11 @@ class _DiskusiState extends State<Diskusi> {
                       child: TextField(
                         maxLines: null,
                         controller: replyController,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           color: GlobalColors.text,
                         ),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           isCollapsed: true,
                           isDense: true,
                           contentPadding: EdgeInsets.only(top: 7),
@@ -291,7 +324,7 @@ class _DiskusiState extends State<Diskusi> {
                   //--- Tombol Kirim ---//
                   IconButton(
                     onPressed: reply,
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.send,
                       size: 30,
                       color: GlobalColors.onBackground,

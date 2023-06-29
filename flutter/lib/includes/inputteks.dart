@@ -23,7 +23,7 @@ class InputTeks extends StatelessWidget {
     return Container(
       height: 36,
       margin: EdgeInsets.fromLTRB(20, tMargin, 20, bMargin),
-      padding: EdgeInsets.only(left: 20),
+      padding: const EdgeInsets.only(left: 20),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.3),
         borderRadius: BorderRadius.circular(50),
@@ -35,7 +35,7 @@ class InputTeks extends StatelessWidget {
           enableSuggestions: false,
           obscureText: obscure,
           keyboardType: keyboardType,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.white,
           ),
           decoration: InputDecoration(
@@ -43,7 +43,7 @@ class InputTeks extends StatelessWidget {
             hintText: hint,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
-            hintStyle: TextStyle(
+            hintStyle: const TextStyle(
               color: Colors.white,
               fontSize: 14,
             ),

@@ -1,24 +1,31 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:overtalk/models/userModel.dart';
+import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/repository.dart';
 import 'package:overtalk/includes/isian.dart';
 import 'package:overtalk/global.dart';
 
 class BukaDiskusi extends StatefulWidget {
-  final UserModel user;
-  const BukaDiskusi({super.key, required this.user});
+  const BukaDiskusi({
+    super.key,
+  });
 
   @override
   State<BukaDiskusi> createState() => _BukaDiskusiState();
 }
 
 class _BukaDiskusiState extends State<BukaDiskusi> {
+  final _email = FirebaseAuth.instance.currentUser!.email!;
   final Repository repository = Repository();
 
   TextEditingController judulController = TextEditingController();
   TextEditingController kontenController = TextEditingController();
   String error = "";
+
+  Future<UserModel> getCurrentUser() async {
+    UserModel user = await repository.getUser(_email);
+    return user;
+  }
 
   void bukaDiskusi() async {
     error = "";
@@ -30,12 +37,13 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
     }
     setState(() {});
 
+    UserModel user = await getCurrentUser();
+
     if (error == "") {
       final response = await repository.bukaDiskusi(
         judulController.text.trim(),
         kontenController.text.trim(),
-        widget.user.nama,
-        DateFormat("yyyy-MM-dd").format(DateTime.now()),
+        user.id,
       );
 
       if (response) {
@@ -67,14 +75,14 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: Icon(
+          icon: const Icon(
             Icons.close,
             color: GlobalColors.onBackground,
           ),
           iconSize: 25,
         ),
         leadingWidth: 40,
-        title: Text(
+        title: const Text(
           "Buka Diskusi",
           style: TextStyle(color: GlobalColors.onBackground),
         ),
@@ -90,7 +98,7 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
               //--- Penulisan Eror ---//
               Text(
                 error,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.red,
                 ),
               ),
@@ -107,22 +115,22 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
                 child: TextField(
                   controller: kontenController,
                   maxLines: 20,
-                  style: TextStyle(color: GlobalColors.onBackground),
+                  style: const TextStyle(color: GlobalColors.onBackground),
                   cursorColor: GlobalColors.onBackground,
                   decoration: InputDecoration(
                     labelText: "Konten",
-                    labelStyle: TextStyle(color: GlobalColors.prettyGrey),
+                    labelStyle: const TextStyle(color: GlobalColors.prettyGrey),
                     alignLabelWithHint: true,
                     floatingLabelStyle:
-                        TextStyle(color: GlobalColors.onBackground),
+                        const TextStyle(color: GlobalColors.onBackground),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: GlobalColors.prettyGrey,
                       ),
                       borderRadius: BorderRadius.circular(13),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
+                      borderSide: const BorderSide(
                         color: GlobalColors.prettyGrey,
                       ),
                       borderRadius: BorderRadius.circular(13),
@@ -136,12 +144,12 @@ class _BukaDiskusiState extends State<BukaDiskusi> {
                 onTap: bukaDiskusi,
                 child: Container(
                   height: 42,
-                  margin: EdgeInsets.fromLTRB(70, 40, 70, 0),
+                  margin: const EdgeInsets.fromLTRB(70, 40, 70, 0),
                   decoration: BoxDecoration(
                     color: GlobalColors.primaryColor,
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Text(
                       "Buka Diskusi",
                       style: TextStyle(

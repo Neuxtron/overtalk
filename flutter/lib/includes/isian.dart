@@ -23,17 +23,17 @@ class Isian extends StatelessWidget {
         controller: controller,
         keyboardType: keyboardype,
         obscureText: obscure,
-        style: TextStyle(color: GlobalColors.onBackground),
+        style: const TextStyle(color: GlobalColors.onBackground),
         cursorColor: GlobalColors.onBackground,
         decoration: InputDecoration(
           labelText: labelText,
-          labelStyle: TextStyle(color: GlobalColors.prettyGrey),
-          contentPadding: EdgeInsets.only(top: 3),
-          floatingLabelStyle: TextStyle(color: GlobalColors.onBackground),
-          enabledBorder: UnderlineInputBorder(
+          labelStyle: const TextStyle(color: GlobalColors.prettyGrey),
+          contentPadding: const EdgeInsets.only(top: 3),
+          floatingLabelStyle: const TextStyle(color: GlobalColors.onBackground),
+          enabledBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: GlobalColors.prettyGrey),
           ),
-          focusedBorder: UnderlineInputBorder(
+          focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: GlobalColors.onBackground),
           ),
         ),
