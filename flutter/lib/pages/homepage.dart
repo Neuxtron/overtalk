@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -27,16 +28,12 @@ class _HomePageState extends State<HomePage> {
   Repository repository = Repository();
   String halaman = "forum";
   String judulHalaman = "OverTalk";
-  List bookmarks = [];
+  UserModel? _user;
   List<UserModel> _listUsers = [];
-  String _namaUser = "";
 
   void getCurrentUser() async {
-    UserModel user = await repository.getUser(_email);
-    setState(() {
-      bookmarks = user.bookmarks;
-      _namaUser = user.nama;
-    });
+    _user = await repository.getUser(_email);
+    setState(() {});
   }
 
   void getUsers() async {
@@ -71,7 +68,11 @@ class _HomePageState extends State<HomePage> {
     getDiskusi();
     getUsers();
     getCurrentUser();
+    // TODO: Foreground Messaging
+    FirebaseMessaging.onMessage.listen(notifyUser);
   }
+
+  Future<void> notifyUser(RemoteMessage message) async {}
 
   @override
   void initState() {
@@ -100,16 +101,17 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 20, top: 30),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20, top: 30),
                       child: CircleAvatar(
                         backgroundColor: GlobalColors.primaryColor,
-                        backgroundImage: AssetImage("assets/profile.jpg"),
+                        backgroundImage: NetworkImage(_user?.fotoUrl ??
+                            "https://firebasestorage.googleapis.com/v0/b/overtalk-ffb9f.appspot.com/o/profile_pictures%2Fdefault_profile.jpg?alt=media&token=dc816f76-6954-4cdc-b472-7b0ecec6e1ca"),
                         radius: 40,
                       ),
                     ),
                     Text(
-                      _namaUser,
+                      _user?.nama ?? "",
                       style: const TextStyle(
                         fontSize: 18,
                       ),
@@ -159,7 +161,7 @@ class _HomePageState extends State<HomePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => Setelan(
-                            namaUser: _namaUser,
+                            user: _user,
                           ),
                         ),
                       );
@@ -262,11 +264,14 @@ class _HomePageState extends State<HomePage> {
                         String judul = dataDiskusi[index].judul;
                         int idUser = dataDiskusi[index].idUser;
                         String pembuka = "Unknown User";
+                        String? token;
                         bool tampil = false;
+                        List bookmarks = _user?.bookmarks ?? [];
 
                         for (var element in _listUsers) {
                           if (idUser == element.id) {
                             pembuka = element.nama;
+                            token = element.token;
                           }
                         }
 
@@ -314,6 +319,7 @@ class _HomePageState extends State<HomePage> {
                                       diskusi: dataDiskusi[index],
                                       pembuka: pembuka,
                                       bookmarks: bookmarks,
+                                      token: token,
                                     ),
                                   ),
                                 ).then((value) => refresh());

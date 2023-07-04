@@ -1,16 +1,21 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:overtalk/auth/mainpage.dart';
 import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/repository.dart';
 import 'package:overtalk/includes/isian.dart';
-import 'package:overtalk/auth/login.dart';
 import 'package:overtalk/global.dart';
 
 class Setelan extends StatefulWidget {
-  final String namaUser;
+  final UserModel? user;
+
   const Setelan({
     super.key,
-    required this.namaUser,
+    this.user,
   });
 
   @override
@@ -25,6 +30,7 @@ class _SetelanState extends State<Setelan> {
   bool loading = false;
   String error = "";
   int kHapusAkun = 0;
+  bool _kGantiFoto = false;
 
   void simpan() async {
     loading = true;
@@ -39,12 +45,7 @@ class _SetelanState extends State<Setelan> {
 
     if (error == "") {
       UserModel user = await repository.getUser(_email);
-      final response = await repository.updateUser(
-        user.id,
-        namaController.text,
-        _email,
-        user.bookmarks,
-      );
+      final response = await repository.updateUser(user);
 
       if (response) {
         if (context.mounted) Navigator.pop(context);
@@ -56,22 +57,63 @@ class _SetelanState extends State<Setelan> {
   }
 
   void logout() {
+    FirebaseAuth.instance.signOut();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => const Login(),
+        builder: (context) => const MainPage(),
       ),
       (e) => false,
     );
   }
 
-  void hapusAkun() {
+  void hapusAkun() async {
     if (kHapusAkun == 1) {
       repository.hapusAkun(_email);
+      await FirebaseAuth.instance.currentUser?.delete();
       logout();
     }
     kHapusAkun++;
     setState(() {});
+  }
+
+  void gantiFoto() async {
+    if (_kGantiFoto) {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image);
+      setState(() {
+        _kGantiFoto = false;
+      });
+      if (result == null) return;
+
+      final foto = result.files.first;
+      uploadFoto(foto);
+    } else {
+      setState(() {
+        _kGantiFoto = true;
+      });
+    }
+  }
+
+  void uploadFoto(PlatformFile foto) async {
+    final ref =
+        FirebaseStorage.instance.ref().child("profile_pictures/$_email");
+    final uploadTask = ref.putFile(File(foto.path!));
+
+    final snapshot = await uploadTask.whenComplete(() {});
+    final fotoUrl = await snapshot.ref.getDownloadURL();
+
+    UserModel user = await repository.getUser(_email);
+    user.fotoUrl = fotoUrl;
+    await repository.updateUser(user);
+  }
+
+  void reload() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const Setelan(),
+      ),
+    );
   }
 
   @override
@@ -83,7 +125,7 @@ class _SetelanState extends State<Setelan> {
   @override
   void initState() {
     super.initState();
-    namaController.text = widget.namaUser;
+    namaController.text = widget.user?.nama ?? "";
     emailController.text = _email;
     setState(() {});
   }
@@ -119,21 +161,50 @@ class _SetelanState extends State<Setelan> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              //
               //--- Foto Profil ---//
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image(
-                      image: const NetworkImage(""),
-                      height: 100,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Image.asset(
-                          "assets/profile.jpg",
-                          width: 100,
-                        );
-                      },
+                  child: SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Stack(
+                        children: [
+                          Image(
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
+                            image: NetworkImage(widget.user?.fotoUrl ?? ""),
+                            errorBuilder: (context, error, stackTrace) {
+                              return Image.asset(
+                                "assets/profile.jpg",
+                              );
+                            },
+                          ),
+                          Center(
+                            child: GestureDetector(
+                              onTap: gantiFoto,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                opacity: _kGantiFoto ? 1 : 0,
+                                child: Container(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  color: Colors.black26,
+                                  child: const Icon(
+                                    Icons.file_upload_outlined,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -168,16 +239,17 @@ class _SetelanState extends State<Setelan> {
                 labelText: "Email",
                 controller: emailController,
                 keyboardype: TextInputType.emailAddress,
+                readOnly: true,
               ),
-              ListTile(
-                onTap: () {},
-                title: const Text(
-                  "Ubah Password",
-                  style: TextStyle(
-                    color: GlobalColors.onBackground,
-                  ),
-                ),
-              ),
+              // ListTile(
+              //   onTap: () {},
+              //   title: const Text(
+              //     "Ubah Password",
+              //     style: TextStyle(
+              //       color: GlobalColors.onBackground,
+              //     ),
+              //   ),
+              // ),
 
               //--- Settings ---//
               const Padding(

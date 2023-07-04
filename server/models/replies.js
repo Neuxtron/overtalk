@@ -14,6 +14,14 @@ const Replies = koneksi.define('replies', {
         type: DataTypes.TEXT,
         allowNull: false,
     },
+    upVotes: {
+        type: DataTypes.JSON,
+        allowNull: true,
+    },
+    downVotes: {
+        type: DataTypes.JSON,
+        allowNull: true,
+    }
 }, {
     freezeTableName: true,
 })

@@ -14,18 +14,34 @@ router.get('/', (req, res) => {
 })
 router.post('/', (req, res) => {
     const data = req.body;
-    Diskusi.create({
-        idUser: data.idUser,
-        judul: data.judul,
-        konten: data.konten,
-    }).then(
+    data.id = null;
+    Diskusi.create(data).then((data) =>
         res.json({
             message: "Diskusi berhasil ditambah",
             status: "berhasil",
+            data: data,
         })
     ).catch((e) => {
         res.json({
             message: "Diskusi tidak dapat ditambah",
+            status: "gagal",
+        })
+    })
+})
+router.put('/', (req, res) => {
+    const data = req.body;
+    Diskusi.update(data, {
+        where: {
+            id: data.id,
+        }
+    }).then(
+        res.json({
+            message: "Diskusi berhasil diupdate",
+            status: "berhasil",
+        })
+    ).catch((e) => {
+        res.json({
+            message: "Diskusi tidak dapat diupdate",
             status: "gagal",
         })
     })

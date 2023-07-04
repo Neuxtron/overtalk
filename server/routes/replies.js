@@ -21,12 +21,31 @@ router.post('/', (req, res) => {
         reply: data.reply,
     }).then(() => {
         res.json({
-            message: "User berhasil ditambah",
+            message: "Reply berhasil ditambah",
             status: "berhasil",
         })
     }).catch((e) => (
         res.json({
-            message: "User tidak dapat ditambah",
+            message: "Reply tidak dapat ditambah",
+            error: e,
+            status: "gagal",
+        })
+    ))
+})
+router.put('/', (req, res) => {
+    const data = req.body;
+    Replies.update(data, {
+        where: {
+            id: data.id
+        }
+    }).then(() => {
+        res.json({
+            message: "Reply berhasil diupdate",
+            status: "berhasil",
+        })
+    }).catch((e) => (
+        res.json({
+            message: "Reply tidak dapat diupdate",
             error: e,
             status: "gagal",
         })

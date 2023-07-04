@@ -20,6 +20,6 @@ const Diskusi = koneksi.define('diskusi', {
     freezeTableName: true,
 })
 
-Diskusi.belongsTo(Users, {foreignKey: 'idUser'});
+// Diskusi.belongsTo(Users, {foreignKey: 'idUser'});
 
 module.exports = Diskusi;

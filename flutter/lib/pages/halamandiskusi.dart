@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:overtalk/models/diskusi_model.dart';
@@ -11,12 +12,14 @@ class Diskusi extends StatefulWidget {
   final DiskusiModel diskusi;
   final String pembuka;
   final List bookmarks;
+  final String? token;
 
   const Diskusi({
     super.key,
     required this.diskusi,
     required this.pembuka,
     required this.bookmarks,
+    required this.token,
   });
 
   @override
@@ -31,10 +34,17 @@ class _DiskusiState extends State<Diskusi> {
 
   List<Replies> replies = [];
   List<UserModel> listUsers = [];
+  List<Reference> _attachments = [];
   bool _bookmarked = false;
+  UserModel? _user;
 
   void getUsers() async {
     listUsers = await repository.getUsers();
+    setState(() {});
+  }
+
+  void getUser() async {
+    _user = await repository.getUser(_email);
     setState(() {});
   }
 
@@ -43,13 +53,31 @@ class _DiskusiState extends State<Diskusi> {
     setState(() {});
   }
 
+  void getAttachments() async {
+    final ref = "/attachments/${getAttachpentsPath()}";
+    final files = await FirebaseStorage.instance.ref(ref).listAll();
+    _attachments.addAll(files.items);
+
+    setState(() {});
+  }
+
+  String getAttachpentsPath() {
+    String path = "${widget.diskusi.id}_${widget.diskusi.judul}";
+    return path;
+  }
+
   void reply() async {
     final String reply = replyController.text;
     replyController.text = "";
 
     UserModel user = await repository.getUser(_email);
 
-    final response = await repository.reply(widget.diskusi.id, user.id, reply);
+    final response = await repository.reply(
+      widget.diskusi,
+      user,
+      reply,
+      widget.token,
+    );
 
     if (response) getReplies();
   }
@@ -63,9 +91,9 @@ class _DiskusiState extends State<Diskusi> {
     } else {
       bookmarks.add(widget.diskusi.id);
     }
+    user.bookmarks = bookmarks;
 
-    final response =
-        await repository.updateUser(user.id, user.nama, _email, bookmarks);
+    final response = await repository.updateUser(user);
     if (response) {
       setState(() {
         _bookmarked = !_bookmarked;
@@ -82,12 +110,44 @@ class _DiskusiState extends State<Diskusi> {
     }
   }
 
+  void vote(Replies reply, String value) async {
+    if (value == "up") {
+      if (reply.upVotes.contains(_user?.id)) {
+        reply.upVotes.remove(_user?.id);
+      } else {
+        reply.upVotes.add(_user?.id);
+        reply.downVotes.remove(_user?.id);
+      }
+    } else if (value == "down") {
+      if (reply.downVotes.contains(_user?.id)) {
+        reply.downVotes.remove(_user?.id);
+      } else {
+        reply.downVotes.add(_user?.id);
+        reply.upVotes.remove(_user?.id);
+      }
+    }
+
+    await repository.vote(reply);
+    getReplies();
+  }
+
+  void openFile(String src) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewFoto(src: src),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     getReplies();
     getBookmark();
     getUsers();
+    getUser();
+    getAttachments();
   }
 
   @override
@@ -171,6 +231,47 @@ class _DiskusiState extends State<Diskusi> {
                     style: const TextStyle(color: GlobalColors.prettyGrey),
                   ),
 
+                  //--- Attachments ---//
+                  GridView.builder(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.only(top: 20),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 4 / 1,
+                      crossAxisSpacing: 5,
+                    ),
+                    itemCount: _attachments.length,
+                    itemBuilder: (context, index) {
+                      return Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: InkWell(
+                          onTap: () async {
+                            final src =
+                                await _attachments[index].getDownloadURL();
+                            openFile(src);
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _attachments[index].name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
                   //--- Konten Diskusi ---//
                   Padding(
                     padding: const EdgeInsets.only(top: 40),
@@ -191,6 +292,9 @@ class _DiskusiState extends State<Diskusi> {
                     thickness: 1,
                     height: 50,
                   ),
+
+                  //--- Jarak ---//
+                  const SizedBox(height: 10),
                   const Text(
                     "Replies",
                     style: TextStyle(
@@ -198,9 +302,6 @@ class _DiskusiState extends State<Diskusi> {
                       color: GlobalColors.onBackground,
                     ),
                   ),
-
-                  //--- Jarak ---//
-                  const SizedBox(height: 30),
 
                   //--- List Replies ---/
                   ListView.separated(
@@ -210,55 +311,137 @@ class _DiskusiState extends State<Diskusi> {
                     padding: const EdgeInsets.only(bottom: 50),
                     itemBuilder: (context, index) {
                       Replies reply = replies[index];
-                      String nama = "";
+                      String nama = "Anonymous";
+                      String fotoUrl =
+                          "gs://overtalk-ffb9f.appspot.com/profile_pictures/default_profile.jpg";
+                      int upVotes = reply.upVotes.length;
+                      int downVotes = reply.downVotes.length;
+                      bool upVote = false;
+                      bool downVote = false;
 
-                      for (var element in listUsers) {
-                        if (replies[index].idUser == element.id) {
-                          nama = element.nama;
+                      for (var user in listUsers) {
+                        if (replies[index].idUser == user.id) {
+                          nama = user.nama;
+                          fotoUrl = user.fotoUrl;
                         }
                       }
 
+                      if (reply.upVotes.contains(_user?.id)) upVote = true;
+                      if (reply.downVotes.contains(_user?.id)) downVote = true;
+
                       return Padding(
-                          padding: const EdgeInsets.only(top: 25),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.grey.shade400,
-                                backgroundImage:
-                                    const AssetImage("assets/profile.jpg"),
-                              ),
-                              Padding(
+                        padding: const EdgeInsets.only(top: 25),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.grey.shade400,
+                              backgroundImage: NetworkImage(fotoUrl),
+                            ),
+                            Expanded(
+                              child: Padding(
                                 padding: const EdgeInsets.only(left: 10),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       nama,
-                                      style:
-                                          TextStyle(color: GlobalColors.grey9),
+                                      style: const TextStyle(
+                                          color: GlobalColors.grey9),
                                     ),
                                     Text(
                                       DateFormat('dd-MM-yyyy')
                                           .format(reply.createdAt),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: GlobalColors.grey9,
                                         height: 1.5,
                                       ),
                                     ),
+                                    const SizedBox(height: 10),
                                     Text(
                                       reply.reply,
-                                      style: TextStyle(),
+                                      style: const TextStyle(),
                                     ),
+
+                                    //--- DownVote ---//
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        InkWell(
+                                          onTap: () {
+                                            vote(reply, "down");
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 5),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.arrow_drop_down,
+                                                  size: 30,
+                                                  color: downVote
+                                                      ? Colors.red
+                                                      : GlobalColors.grey9,
+                                                ),
+                                                Text(
+                                                  "  $downVotes ",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: downVote
+                                                        ? Colors.red
+                                                        : GlobalColors.grey9,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+                                        //--- UpVote ---//
+                                        InkWell(
+                                          onTap: () {
+                                            vote(reply, "up");
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 8, vertical: 5),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.arrow_drop_up,
+                                                  size: 30,
+                                                  color: upVote
+                                                      ? Colors.green
+                                                      : GlobalColors.grey9,
+                                                ),
+                                                Text(
+                                                  "  $upVotes ",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: upVote
+                                                        ? Colors.green
+                                                        : GlobalColors.grey9,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    )
                                   ],
                                 ),
-                              )
-                            ],
-                          ));
+                              ),
+                            )
+                          ],
+                        ),
+                      );
                     },
                     separatorBuilder: (context, index) {
-                      return Divider(
+                      return const Divider(
                         color: GlobalColors.grey9,
+                        height: 1,
                       );
                     },
                   ),
@@ -279,8 +462,11 @@ class _DiskusiState extends State<Diskusi> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(100),
                     child: Image(
-                      image: const NetworkImage(""),
-                      width: 50,
+                      fit: BoxFit.cover,
+                      image: NetworkImage(_user?.fotoUrl ??
+                          "gs://overtalk-ffb9f.appspot.com/profile_pictures/default_profile.jpg"),
+                      width: 45,
+                      height: 45,
                       errorBuilder: (context, error, stackTrace) {
                         return Image.asset(
                           "assets/profile.jpg",
@@ -336,6 +522,23 @@ class _DiskusiState extends State<Diskusi> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ViewFoto extends StatelessWidget {
+  final String src;
+  const ViewFoto({super.key, required this.src});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: Center(child: Image.network(src)),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
+  await FirebaseMessaging.instance.getToken();
+
+  await FirebaseAppCheck.instance.activate(
+    webRecaptchaSiteKey: 'recaptcha-v3-site-key',
+    androidProvider: AndroidProvider.debug,
+    appleProvider: AppleProvider.appAttest,
+  );
 
   runApp(const MyApp());
 }
@@ -15,15 +23,8 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  void getToken() async {
-    final token = await FirebaseMessaging.instance.getToken();
-    print(token);
-  }
-
   @override
   Widget build(BuildContext context) {
-    getToken();
-
     return MaterialApp(
       home: const MainPage(),
       debugShowCheckedModeBanner: false,

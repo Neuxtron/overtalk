@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 class Replies {
   final int idReplies;
   final int idDiskusi;
   final int idUser;
   final String reply;
+  List upVotes;
+  List downVotes;
   final DateTime createdAt;
 
   Replies(
@@ -10,6 +14,8 @@ class Replies {
     this.idDiskusi,
     this.idUser,
     this.reply,
+    this.upVotes,
+    this.downVotes,
     this.createdAt,
   );
 
@@ -19,6 +25,8 @@ class Replies {
       json["idDiskusi"],
       json["idUser"],
       json["reply"],
+      json["upVotes"] == null ? [] : jsonDecode(json["upVotes"]),
+      json["downVotes"] == null ? [] : jsonDecode(json["downVotes"]),
       DateTime.parse(json["createdAt"]),
     );
   }

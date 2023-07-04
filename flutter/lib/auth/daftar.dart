@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:overtalk/models/user_model.dart';
 import 'package:overtalk/repository.dart';
 import 'package:overtalk/includes/inputteks.dart';
 import 'package:overtalk/global.dart';
@@ -23,8 +25,9 @@ class _DaftarState extends State<Daftar> {
   bool loading = false;
 
   void signUp() async {
-    loading = true;
-    setState(() {});
+    setState(() {
+      loading = true;
+    });
 
     //--- Error Checking ---//
     error = "";
@@ -48,6 +51,7 @@ class _DaftarState extends State<Daftar> {
           email: emailController.text.trim(),
           password: passwordController.text,
         );
+        if (mounted) Navigator.pop(context);
       } on FirebaseAuthException catch (e) {
         setState(() {
           error = e.message.toString();
@@ -67,9 +71,14 @@ class _DaftarState extends State<Daftar> {
         error = "Gagal mendaftar akun";
       }
     } else {
-      loading = false;
-      setState(() {});
+      setState(() {
+        loading = false;
+      });
     }
+  }
+
+  bool confirmPassword() {
+    return true;
   }
 
   @override

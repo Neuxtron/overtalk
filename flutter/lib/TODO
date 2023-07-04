@@ -1,1 +1,13 @@
-safs
+# 1. Mengganti MockAPI dengan Firebase
+# 2. Menghilangkan ikon Flutter dan  mengantinya menjadi ikon aplikasi
+# 3. Tambahkan fitur File Transfer Protocol
+# 4. Membuat lupa password (Firebase akan mengirim email berupa link lupa password, kemudian diklik untuk ganti password baru. Atau pakai domain - email SMTP)
+# 5. Membuat push notification
+# 6. Mengganti foto profile
+# 7. Setelah registrasi menuju ke forum diskusi
+# 8. Kalau salah password informasi yang keluar "Anda salah password"
+# 9. Kalau salah email informais yang keluar "Email Anda belum terdaftar"
+# 10. Desain lebih interaktif
+
+
+# writeByteSync: type 'List<int>' is not a subtype of type 'int'

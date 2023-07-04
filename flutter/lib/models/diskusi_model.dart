@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class DiskusiModel {
   final int id;
   final int idUser;
@@ -21,5 +23,14 @@ class DiskusiModel {
       konten: json['konten'],
       createdAt: DateTime.parse(json['createdAt']),
     );
+  }
+
+  String toJson() {
+    return jsonEncode({
+      "id": id,
+      "idUser": idUser,
+      "judul": judul,
+      "konten": konten,
+    });
   }
 }

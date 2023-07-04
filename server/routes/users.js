@@ -39,13 +39,11 @@ router.post('/', (req, res) => {
 })
 router.put('/', (req, res) => {
     const data = req.body;
-    Users.update({
-        email: data.email,
-        nama: data.nama,
-        bookmarks: data.bookmarks,
-    },{
+    const id = data.id;
+    delete data.id;
+    Users.update(data, {
         where: {
-            id: parseInt(data.id),
+            id: parseInt(id),
         }
     }).then(() => {
         res.json({
@@ -64,7 +62,7 @@ router.delete('/', (req, res) => {
     const data = req.body;
     Users.destroy({
         where: {
-            id: data.id,
+            email: data.email,
         }
     }).then(() => {
         res.json({

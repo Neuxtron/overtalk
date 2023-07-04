@@ -1,5 +1,6 @@
-import 'dart:convert';
+// ignore_for_file: avoid_print
 
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:overtalk/models/diskusi_model.dart';
 import 'package:overtalk/models/replies_model.dart';
@@ -7,6 +8,7 @@ import 'package:overtalk/models/user_model.dart';
 
 class Repository {
   final _baseUrl = "http://192.168.18.14:3000";
+  // final _baseUrl = "http://192.168.43.135:3000";
 
   //--- Ambil Satu User ---//
   Future getUser(String email) async {
@@ -79,20 +81,18 @@ class Repository {
   }
 
   //--- Buka Diskusi ---//
-  Future bukaDiskusi(String judul, String konten, int idUser) async {
+  Future bukaDiskusi(DiskusiModel model) async {
     try {
       final response = await http.post(
         Uri.parse("$_baseUrl/diskusi"),
         headers: <String, String>{"content-type": "application/json"},
-        body: jsonEncode({
-          "judul": judul,
-          "konten": konten,
-          "idUser": idUser,
-        }),
+        body: model.toJson(),
       );
 
       if (response.statusCode == 200) {
-        return true;
+        Map jsonData = jsonDecode(response.body);
+        int id = jsonData["data"]["id"];
+        return id;
       } else {
         return false;
       }
@@ -111,6 +111,7 @@ class Repository {
         List jsonData = jsonDecode(response.body);
         List<Replies> dataReplies =
             jsonData.map((e) => Replies.fromJson(e)).toList();
+
         return dataReplies;
       }
     } catch (e) {
@@ -119,14 +120,17 @@ class Repository {
   }
 
   //--- Tambah Reply ---//
-  Future reply(int idDiskusi, int idUser, String reply) async {
+  Future reply(
+      DiskusiModel diskusi, UserModel user, String reply, String? token) async {
+    if (token != null) notify(token, diskusi, user, reply);
+
     try {
       final response = await http.post(
         Uri.parse("$_baseUrl/replies"),
         headers: <String, String>{"content-type": "application/json"},
         body: jsonEncode({
-          "idDiskusi": idDiskusi,
-          "idUser": idUser,
+          "idDiskusi": diskusi.id,
+          "idUser": user.id,
           "reply": reply,
         }),
       );
@@ -141,22 +145,32 @@ class Repository {
     }
   }
 
+  Future vote(Replies reply) async {
+    final response = await http.put(
+      Uri.parse("$_baseUrl/replies"),
+      headers: <String, String>{"content-type": "application/json"},
+      body: jsonEncode({
+        "id": reply.idReplies,
+        "upVotes": reply.upVotes,
+        "downVotes": reply.downVotes,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   //--- Update User ---//
-  Future updateUser(
-      int idUser, String nama, String email, List bookmarks) async {
+  Future updateUser(UserModel user) async {
     try {
       final response = await http.put(
         Uri.parse("$_baseUrl/users"),
         headers: <String, String>{"content-type": "application/json"},
-        body: jsonEncode({
-          "id": idUser,
-          "nama": nama,
-          "email": email,
-          "bookmarks": bookmarks,
-        }),
+        body: user.toJson(),
       );
-
-      print(response.body);
 
       if (response.statusCode == 200) {
         return true;
@@ -223,6 +237,33 @@ class Repository {
       }
     } catch (e) {
       print(e.toString());
+    }
+  }
+
+  Future notify(
+      String token, DiskusiModel diskusi, UserModel user, String reply) async {
+    final response = await http.post(
+      Uri.parse("https://fcm.googleapis.com/fcm/send"),
+      headers: {
+        "Authorization":
+            "key=AAAAWz_qkXM:APA91bFNvFzVp6ZlsgYdPA9WKJFf0GhMnAokWMWOjdNX4pJml7GXWPfQ_CEjSZ5ltgXMLwncJUrmXt8ReL0WQLYTpd2Ei3g2YYuJYZlkcVVTFudRsZOPmTXfSNFOgNxwVTHRIIMfO4tT",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "to": token,
+        "priority": "high",
+        "notification": {
+          "title": "${user.nama} membalas diskusi Anda: ${diskusi.judul}",
+          "body": reply,
+        }
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print(response.body);
+      return false;
     }
   }
 }
