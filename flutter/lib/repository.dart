@@ -7,8 +7,8 @@ import 'package:overtalk/models/replies_model.dart';
 import 'package:overtalk/models/user_model.dart';
 
 class Repository {
-  final _baseUrl = "http://192.168.18.14:3000";
-  // final _baseUrl = "http://192.168.43.135:3000";
+  // final _baseUrl = "http://192.168.18.14:3000";
+  final _baseUrl = "http://192.168.43.135:3000";
 
   //--- Ambil Satu User ---//
   Future getUser(String email) async {
