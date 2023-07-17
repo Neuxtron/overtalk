@@ -21,7 +21,17 @@ const Users = koneksi.define('users', {
     token: {
         type: DataTypes.STRING,
         allowNull: true,
-    }
+    },
+    role: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "user"
+    },
+    adminPass: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: ""
+    },
 }, {
     freezeTableName: true,
 })
