@@ -19,9 +19,9 @@ class DiskusiModel {
     return DiskusiModel(
       id: json['id'],
       idUser: json['idUser'],
-      judul: json['judul'],
-      konten: json['konten'],
-      createdAt: DateTime.parse(json['createdAt']),
+      judul: json['judul'] ?? "",
+      konten: json['konten'] ?? "",
+      createdAt: DateTime.parse(json['createdAt'] ?? ""),
     );
   }
 
